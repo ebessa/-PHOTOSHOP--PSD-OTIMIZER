@@ -1,0 +1,110 @@
+#target photoshop
+
+(function(GlobalObject,app){
+	var inVisible = 0, //variaveis de performance
+		empty = 0,
+		flattened = 0,
+		unlocked = 0,
+		stats = { //interface para incrementar
+			inVisible : 0,
+			empty : 0,
+			flattened : 0,
+			unlocked : 0
+		};
+		
+	var MakeLoop = function (config){
+			
+		if ( app.documents.length > 0 )
+		{
+			
+			var startRulerUnits = app.preferences.rulerUnits;
+			app.preferences.rulerUnits = Units.PIXELS;
+
+				var em = []
+		
+				Loop = function (obj){ //yep
+					var layersSetCol = obj.layerSets,
+						isVisible,
+						currentLayer;
+						
+					//layers fora de pastas
+					for (var cal=0;(obj.artLayers.length -1) >= cal; ++cal){
+						config ? config.callback(obj.artLayers[cal]) : "";
+					}	
+				
+					//layers DENTRO  de pastas
+					for(var i=0;(layersSetCol.length -1) >= i; ++i){
+								var thisSet = layersSetCol[i]
+								isVisible = thisSet.visible;
+								
+								if(thisSet.allLocked == true){
+									thisSet.allLocked = false;//altera a visibilidade
+									++stats.unlocked;
+								}
+							
+							
+								//TODO: SE REMOVER A LAYER DENTRO DO CALLBACK, o restante do script vai dar merda.
+								if(config && config.watchVisibility === true){
+									
+									if(!isVisible){//armazena referencia de quais pastas estão desabilitadas - o photoshop vai ativar todas quando eu setar o "lock".
+										thisSet.visible = false;// RESTAURA A VISIBILIDADE
+										//alert("callback");
+										config.callback(thisSet); // se a layer não for visível não executa o restante do loop - não ha necessidade de verificar se ela tem filhos.
+										//continue;
+									}
+								
+								}
+							
+								if(thisSet.artLayers.length > 0){
+									for (var al=0;(thisSet.artLayers.length -1) >= al; ++al){
+										config ? config.callback(thisSet.artLayers[al]) : "";
+									}
+								}
+								if(thisSet.layerSets.length > 0){
+									Loop(layersSetCol[i]);
+								}
+
+							
+								thisSet.visible = isVisible;// RESTAURA A VISIBILIDADE
+					}
+					
+				};
+			
+				Loop(app.activeDocument); //primeiro loop
+				
+				// re-colocado em váriaveis por questão de performance
+				inVisible = stats.inVisible;
+				empty = stats.empty;
+				flattened = stats.flattened;
+				unlocked = stats.unlocked;
+			
+				if((unlocked + flattened + inVisible +empty) > 0){ //se qualquer coisa tiver sido alterada.
+					
+					alert(
+						"Status Report: \n" +
+						(unlocked > 0 ? unlocked + " layers destravadas \n" : "")+
+						(flattened > 0 ? flattened + " Smart objects rasterizados. \n" : "")+
+						(inVisible  > 0 ? inVisible + " Layers invisíveis removidas. \n" : "")+
+						(empty     > 0 ? empty + "  Layers visiveis, mas sem conteúdo, removidas." : "")
+					);
+					
+				} else {
+					
+					alert("Parece que nada foi alterado...");
+					
+				}
+
+				app.preferences.rulerunits = startRulerUnits;
+			
+			} else {
+				
+				alert("Nenhum documento aberto!");
+				return;
+				
+			}
+			
+	}
+
+	GlobalObject.MakeLoop = MakeLoop;
+	GlobalObject.LoopStats = stats;
+}(this, app));
