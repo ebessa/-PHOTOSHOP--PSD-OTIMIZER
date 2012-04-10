@@ -4,6 +4,11 @@
 	var inVisible = 0, //variaveis de performance
 		empty = 0,
 		flattened = 0,
+		cal=0,
+		calLen,
+		i=0,
+		iLen,
+		objAl,
 		unlocked = 0;
 		// stats = { //interface para incrementar
 			// inVisible : 0,
@@ -16,7 +21,7 @@
 			
 			var startRulerUnits = app.preferences.rulerUnits;
 			app.preferences.rulerUnits = Units.PIXELS;
-
+			
 				var em = [];
 				
 				function unlock(currentLayer){
@@ -37,7 +42,7 @@
 						
 				
 					//layers DENTRO  de pastas
-					for(var i=0;(layersSetCol.length -1) >= i; ++i){
+					for(i=0, iLen = (layersSetCol.length -1); iLen >= i; ++i){
 								var thisSet = layersSetCol[i]
 								isVisible = thisSet.visible;
 								
@@ -47,14 +52,15 @@
 									// ++stats.unlocked;
 								// }
 							
+								unlock(thisSet);
 							
 								if(config && config.watchVisibility === true){
 									
 									if(!isVisible){//armazena referencia de quais pastas estão desabilitadas - o photoshop vai ativar todas quando eu setar o "lock".
 										thisSet.visible = false;// RESTAURA A VISIBILIDADE
 										//alert("callback");
-										//(config && config.callback) ? config.callback(thisSet) : false; // se a layer não for visível não executa o restante do loop - não ha necessidade de verificar se ela tem filhos.
-										//continue;
+										(config && config.callback) ? config.callback(thisSet) : false; // se a layer não for visível não executa o restante do loop - não ha necessidade de verificar se ela tem filhos.
+										continue;//se esta layer está invisível e eu vou removela, não tem porque checar se é uma pasta e contem sublayers
 									}
 								
 								}
@@ -66,7 +72,6 @@
 										// }
 									// }
 									
-									unlock(thisSet);
 									
 									if(config && config.watchFolder){
 										config.callback(thisSet);
@@ -84,10 +89,14 @@
 								thisSet.visible = isVisible;// RESTAURA A VISIBILIDADE
 					}
 					
+					objAl = obj.artLayers;
+			
 					//layers fora de pastas
-					for (var cal=0;(obj.artLayers.length -1) >= cal; ++cal){
-						unlock(obj.artLayers[cal]);
-						(config && config.callback) ? config.callback(obj.artLayers[cal]) : "";
+					for (cal=0, calLen = (objAl.length -1);calLen <= cal; ++cal){
+						try{
+							unlock(objAl[cal]);
+							(config && config.callback) ? config.callback(objAl[cal]) : "";
+						} catch(e){}
 					}	
 					
 				};

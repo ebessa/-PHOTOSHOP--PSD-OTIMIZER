@@ -17,7 +17,7 @@
 			var empty = 0,
 				flattened = 0,
 				unlocked = 0,
-				inVisible = 0,
+				useless = 0,
 				dlg = new Window('dialog', 'PSD Otimizator' );
 				
 			dlg.msgPnl = dlg.add('panel', undefined, 'Escolha o que fazer:');
@@ -31,24 +31,24 @@
 			
 			(function(dlgItens){//aqui só roda depois que a pessoa fecha a janela
 				var unlock = dlgItens.unlock.value,
-					invisible = dlgItens.invisible.value,
+					useless = dlgItens.invisible.value,
 					rasterize = dlgItens.smarto.value,
-					hasChecked = (unlock || invisible || rasterize);
+					hasChecked = (unlock || useless || rasterize);
 					
 				if(hasChecked){
+					unlocked = unlock ? GlobalObject.unlockLayers() : 0;
+					inVisible = useless ? GlobalObject.removeUseless() : 0;
 					flattened = rasterize ? GlobalObject.rasterizeSObject() : 0;
-					inVisible = invisible ? GlobalObject.removeUseless() : 0;
-					if(!rasterize && !invisible && unlock){
-						alert(true);
-						unlocked = GlobalObject.unlockLayers();
-					}
+					// if(!rasterize && !invisible && unlock){
+						// alert(true);
+					// }
 					
 					alert(
 						"Status Report: \n" +
-						(unlocked > 0 ? unlocked + " layers destravadas \n" : "")+
-						(flattened > 0 ? flattened + " Smart objects rasterizados. \n" : "")+
-						(inVisible  > 0 ? inVisible + " Layers invisíveis removidas. \n" : "")+
-						(empty     > 0 ? empty + "  Layers visiveis, mas sem conteúdo, removidas." : "")
+						(unlocked   !== 0 ? unlocked + " layers destravadas \n" : "")+
+						(flattened  !== 0 ? flattened + " Smart objects rasterizados. \n" : "")+
+						(inVisible  !== 0 ? inVisible.inVisible + " Layers invisíveis removidas. \n" : "")+
+						(empty      !== 0 ? inVisible.empty + "  Layers visiveis, mas sem conteúdo, removidas." : "")
 					);
 					
 				}
